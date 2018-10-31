@@ -1,0 +1,29 @@
+{
+  "name": "@fromnibly/hallpass",
+  "version": "1.0.0",
+  "description": "annotation based router for express etc",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "./node_modules/.bin/jest",
+    "install": "./node_modules/.bin/tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/from-nibly/hallpass"
+  },
+  "keywords": [
+    "express",
+    "class",
+    "annotations"
+  ],
+  "author": "from-nibly",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "express": "^4.16.4",
+    "@types/express": "^4.16.0",
+    "@types/reflect-metadata": "^0.1.0",
+    "reflect-metadata": "^0.1.12"
+  }
+}
