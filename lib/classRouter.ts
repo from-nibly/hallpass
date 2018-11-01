@@ -6,6 +6,12 @@ export interface Logger {
   info: (...args: any[]) => void;
 }
 
+export interface HasConstructor {
+  constructor: {
+    name: string;
+  };
+}
+
 export class ClassRouter {
   private instances: { [ctorName: string]: any } = {};
   private logger: Logger;
@@ -16,14 +22,11 @@ export class ClassRouter {
     };
   }
 
-  async start(port: number) {
-    await this.initializeRoutes();
-    this.server.listen(port, () => {
-      this.logger.info(`server started on port ${port}`);
-    });
+  registerRouteHandler<T extends HasConstructor>(routeHandler: T) {
+    this.instances[routeHandler.constructor.name] = routeHandler;
   }
 
-  async initializeRoutes() {
+  initializeRoutes() {
     for (let routerName in this.instances) {
       let routeHandler = this.instances[routerName];
       let routerCfg = store.getRouter(routeHandler.constructor);
@@ -185,9 +188,5 @@ export class ClassRouter {
           });
       };
     }
-  }
-
-  registerRouteHandler(routeHandler: any) {
-    this.instances[routeHandler.constructor.name] = routeHandler;
   }
 }

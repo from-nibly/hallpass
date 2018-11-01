@@ -1,11 +1,10 @@
 {
   "name": "@fromnibly/hallpass",
-  "version": "1.0.0",
-  "description": "annotation based router for express etc",
+  "version": "0.1.0",
+  "description": "Class based express router wiring for typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "./node_modules/.bin/jest",
     "install": "./node_modules/.bin/tsc"
   },
   "repository": {
