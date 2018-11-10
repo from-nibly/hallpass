@@ -1,4 +1,4 @@
-export type httpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head';
+export type httpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'all';
 
 export class ClassRouteStore {
   routers: { [className: string]: RouterConfig } = {};
