@@ -9,6 +9,7 @@ export class RouterConfig {
   routes: { [methodName: string]: RouteConfig } = {};
   preMiddleware: string[] = [];
   postMiddleware: string[] = [];
+  wrappers: string[] = [];
   routerless: boolean = false;
 }
 

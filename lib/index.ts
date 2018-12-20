@@ -11,4 +11,6 @@ export { Routerless } from './annotations/routerless';
 export { RouterPath } from './annotations/routerPath';
 export { Use } from './annotations/use';
 export { Wrap } from './annotations/wrap';
+export { WrapRouter } from './annotations/wrapRouter';
+export { Error } from './annotations/error';
 export { ClassRouter } from './classRouter';

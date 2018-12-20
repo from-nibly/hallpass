@@ -12,6 +12,12 @@ export interface HasConstructor {
   };
 }
 
+export class HandlerContext {
+  instance: any;
+  method: Function;
+  cfg: RouteConfig;
+}
+
 export class ClassRouter {
   private instances: { [ctorName: string]: any } = {};
   private logger: Logger;
@@ -105,12 +111,19 @@ export class ClassRouter {
       this.logger.info('wrapping in async', address);
       method = this.wrapInAsync(method, cfg.error);
     }
+    let routerCfg = store.getRouter(instance.constructor);
+
     //wrap with custom wrappers
     let wrappers = cfg.wrappers.map(address => this.resolveAddress(address));
     for (let wrapper of wrappers) {
       //bind wrapper
       let wrapperConstructor = wrapper.method.bind(wrapper.instance);
-      method = wrapperConstructor(method);
+      method = wrapperConstructor(method, cfg);
+    }
+    let routerWrappers = routerCfg.wrappers.map(address => this.resolveAddress(address));
+    for (let wrapper of routerWrappers) {
+      let wrapperConstructor = wrapper.method.bind(wrapper.instance);
+      method = wrapperConstructor(method, cfg);
     }
     //get pre and post route middleware
     let preMiddleware: Function[] = [];
@@ -123,8 +136,6 @@ export class ClassRouter {
     );
 
     //get pre and post router middleware
-    let routerCfg = store.getRouter(instance.constructor);
-
     let routerPreMiddleware: Function[] = [];
     routerPreMiddleware = routerPreMiddleware.concat(
       ...routerCfg.preMiddleware.map(addr => this.createMiddlewareFunctions(addr, [address]))
@@ -143,7 +154,7 @@ export class ClassRouter {
     ];
   }
 
-  private resolveAddress(address: string): { instance: any; method: Function; cfg: RouteConfig } {
+  private resolveAddress(address: string): HandlerContext {
     let className = address.split('.')[0];
     let methodName = address.split('.')[1];
     //get config
