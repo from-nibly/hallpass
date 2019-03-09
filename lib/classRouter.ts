@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { NextFunction, Request, Response } from 'express';
-import { RouteConfig, store } from './router/store';
+import { RouteConfig, store, RouterConfig } from './router/store';
 
 export interface Logger {
   info: (...args: any[]) => void;
@@ -18,6 +18,14 @@ export class HandlerContext {
   cfg: RouteConfig;
 }
 
+export interface RouterOverrides {
+  path?: string;
+  preMiddleware?: string[];
+  postMiddleware?: string[];
+  wrappers?: string[];
+  routerless?: boolean;
+}
+
 export class ClassRouter {
   private instances: { [ctorName: string]: any } = {};
   private logger: Logger;
@@ -28,8 +36,10 @@ export class ClassRouter {
     };
   }
 
-  registerRouteHandler<T extends HasConstructor>(routeHandler: T) {
+  registerRouteHandler<T extends HasConstructor>(routeHandler: T, overrides?: RouterOverrides) {
     this.instances[routeHandler.constructor.name] = routeHandler;
+    let route = store.getRouter(routeHandler.constructor.name);
+    Object.assign(route, overrides);
   }
 
   initializeRoutes() {
@@ -51,28 +61,24 @@ export class ClassRouter {
 
       for (let routeName of routeNames) {
         let routeCfg = routerCfg.routes[routeName];
+
+        let wrappedLogString = routeCfg.wrappers.reduce((p, wrapper) => {
+          return wrapper + '(' + p + ')';
+        }, routeName);
+        let routerPathLogString = routerCfg.path ? '(' + routerCfg.path + ')' : '';
+        let routePathLogString = routeCfg.path ? '(' + routeCfg.path + ')' : '';
         this.logger.info(
-          'adding route',
-          routeCfg.preMiddleware,
-          routerName,
-          routeName,
-          routeCfg.methods,
-          routeCfg.path,
-          routeCfg.postMiddleware,
-          ''
+          `Adding route ${routerName}${routerPathLogString}.${routeName}${routePathLogString}[${routeCfg.methods.join(
+            ', '
+          )}]: ${[...routerCfg.preMiddleware, ...routeCfg.preMiddleware].join(
+            '->'
+          )}{${wrappedLogString}}${[...routerCfg.postMiddleware, ...routeCfg.postMiddleware].join(
+            '->'
+          )}`
         );
 
         let routeAddress = `${routerName}.${routeName}`;
-        this.logger.info('resolved address', routeAddress);
         let middlewares = this.createMiddlewareFunctions(routeAddress, []);
-
-        this.logger.info(
-          'checking middleware',
-          routerName,
-          routeName,
-          middlewares.map(m => m.name),
-          ''
-        );
 
         for (let method of routeCfg.methods) {
           if (routeCfg.path) {
@@ -84,11 +90,14 @@ export class ClassRouter {
       }
 
       if (!routerCfg.routerless) {
-        if (routerCfg.routerPath) {
-          this.logger.info('binding router', routerName, 'to path', routerCfg.routerPath);
-          this.server.use(routerCfg.routerPath, router);
+        this.logger.info(
+          `Binding router ${routerName}${
+            routerCfg.path ? '(' + routerCfg.path + ')' : ''
+          } with routes [${routeNames.join(', ')}]`
+        );
+        if (routerCfg.path) {
+          this.server.use(routerCfg.path, router);
         } else {
-          this.logger.info('binding router', routerName, 'pathless');
           this.server.use(router);
         }
       }
@@ -108,7 +117,6 @@ export class ClassRouter {
     method = method.bind(instance);
     //wrap in async
     if (cfg.async) {
-      this.logger.info('wrapping in async', address);
       method = this.wrapInAsync(method, cfg.error);
     }
     let routerCfg = store.getRouter(instance.constructor);

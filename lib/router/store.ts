@@ -5,7 +5,7 @@ export class ClassRouteStore {
 }
 
 export class RouterConfig {
-  routerPath: string | RegExp;
+  path: string | RegExp;
   routes: { [methodName: string]: RouteConfig } = {};
   preMiddleware: string[] = [];
   postMiddleware: string[] = [];
